@@ -12,7 +12,7 @@ A lightweight and flexible wrapper around the Fetch API that simplifies HTTP req
 ## Install
 
 ```bash
-npm install easy-fetch
+npm i @fsad-labs/easy-fetch
 ```
 ## Usage
 
