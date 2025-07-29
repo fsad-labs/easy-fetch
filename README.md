@@ -1,4 +1,4 @@
-# easy-fetch
+# easy-fetch - edited
 
 A lightweight and flexible wrapper around the Fetch API that simplifies HTTP requests with reusable clients and built-in middleware support.
 
