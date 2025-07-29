@@ -23,7 +23,7 @@ const { easyFetch,
     createClient,
     easyFetchAuth,
     easyFetchWithHeaders,
-    easyFetchWithTimeout } = require('easy-fetch');
+    easyFetchWithTimeout } =  require('@fsad-labs/easy-fetch');
 
 const baseUrl = "https://jsonplaceholder.typicode.com";
 
