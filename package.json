@@ -3,14 +3,14 @@
   "author": "fullstack-ad",
   "description": "Lightweight fetch wrapper with middleware support",
   "keywords": ["fetch","middleware","http","typescript","api"],
-  "license": "ISC",
+  "license": "MIT",
   "files": ["dist"],
   "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/fsad-labs/easy-fetch"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.cjs",
   "module": "./dist/index.js",
   "types":"dist/index.d.ts",
