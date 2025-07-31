@@ -6,6 +6,7 @@ A lightweight and flexible wrapper around the Fetch API that simplifies HTTP req
 
 - Base URL support
 - Global headers
+- Interceptor or middleware
 - Automatic JSON parsing
 - Simplified error handling
 
@@ -25,8 +26,6 @@ const { easyFetch,
     easyFetchWithHeaders,
     easyFetchWithTimeout } =  require('@fsad-labs/easy-fetch');
 
-const baseUrl = "https://jsonplaceholder.typicode.com";
-
 ```
 
 - [x] easyFetch
@@ -34,47 +33,45 @@ The default fetch wrapper with automatic JSON parsing and basic error handling.
 
 
 ```bash
+const baseUrl = "https://jsonplaceholder.typicode.com";
+
 easyFetch(baseUrl).get("/todos/1").then((res) => console.log("GET", res.data));
-easyFetch(baseUrl).post(crudPost.POST, {
+
+easyFetch(baseUrl).post("/post", {
     body: {
         userId: 1,
-        //id: number,
         title: "TEST",
         body: "TEST Library"
     }
-}).then(res => console.log("POST", res));
+}).then(res => { // TODO  });
 
-easyFetch(baseUrl).put(crudPost.PUT, {
+easyFetch(baseUrl).put("/put", {
     body: {
         userId: 1,
         id: 1,
         title: "TEST",
         body: "TEST Library edited"
     }
-}).then(res=> console.log("PUT my POST", res.statusText));
+}).then(res=> { //TODO });
 
-easyFetch(baseUrl).delete(crudPost.DELETE).then(res=> console.log("DELETE", res.statusText))
+easyFetch(baseUrl).delete("/delete").then(res=> { //TODO } )
+
 ```
 
 - [x] createClient
-Create a reusable client with base URL and headers.
+Create a reusable client, use the request or response middlewares and headers settings.
 
 ```bash
 const easyFetchcustomClient = createClient({ baseUrl: "https://jsonplaceholder.typicode.com" });
 
 easyFetchcustomClient.interceptors.request.use((config) => {
-
     config.headers.append("Custom", "custom-header");
     config.headers.append("Content-Type", "application/json; charset=UTF-8");
 
-    console.log(config.headers);
-
-    // console.log()
     return config;
 });
 
-
-easyFetchcustomClient.interceptors.response.use((response) => {
+easyFetchcustomClient.interceptors.response.use((response, error) => {
     console.log("Interceptor => ", response);
     throw new Error("TROW NEW ERROR FROM intepceptor");
 }, (err) => {
