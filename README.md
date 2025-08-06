@@ -30,7 +30,7 @@ npm i @fsad-labs/easy-fetch
 
 | Response | Type     | Description                |
 | :-------- | :------- | :------------------------- |
-|`data`|`boolean`| data returned
+|`data`|`any`| data returned
 |`status`|`string`| contains the HTTP status codes of the response.
 |`statusText`|`string`| contains the status message corresponding to the HTTP status code
 |`headers`|`any`| response headers
