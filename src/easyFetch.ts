@@ -19,23 +19,17 @@ export class EasyFetch {
         this.interceptors = interceptors;
     }
 
-
     async request<T = any>(config: IRequestConfig): Promise<IResponse<T>> {
         // base url
-        config.url = this.baseUrl + config.url;
+        config.url = this.baseUrl + (config.url || '');
 
         // headers
         if (this.token) {
-            console.log("Adding token", this.token);
-
             this.httpHeaders = {
                 "Authorization": `Bearer ${this.token}`,
                 ...this.httpHeaders
             };
         }
-
-        console.log("this.httpHeaders", this.httpHeaders);
-
 
         if (!config.headers) {
             config.headers = new Headers({ "Content-Type": "application/json" });
@@ -47,14 +41,9 @@ export class EasyFetch {
             })
         }
 
-
-        console.log("config.headers", config.headers);
-
         // add request interceptors
-        if (this.interceptors) {
-            for (const interceptor of this.interceptors?.request?.handlers ?? []) {
-                config = await interceptor(config);
-            }
+        for (const interceptor of this.interceptors?.request?.handlers ?? []) {
+            config = await interceptor(config);
         }
 
         // build url with parameters 
@@ -70,31 +59,43 @@ export class EasyFetch {
             headers: config.headers,
             body: this.prepareBody(config),
             signal: config.signal ?? controller.signal
-        }), config.retries, config.retryDelay).then(async res => {
-            if (this.interceptors) {
-                for (const interceptor of this.interceptors?.response?.successHandlers ?? []) {
-                    res = await interceptor(res);
-                }
-            }
+        }), config.retries, config.retryDelay).then(async (res: Response) => {
 
-            const data = await this.parseBody<T>(res, config.responseType);
-
-            const result: IResponse<T> = {
-                data,
+            let result: IResponse<T> = {
+                data: undefined as unknown as T,
                 status: res.status,
                 statusText: res.statusText,
                 headers: res.headers,
-                config: config,
+            };
+
+            const contenType = res.headers.get("Content-Type") || '';
+
+            for (const interceptor of this.interceptors?.response?.successHandlers ?? []) {
+                res = await interceptor(res);
+            }
+
+            const wasModified = typeof (res as any).data !== "undefined";
+
+            if (!wasModified) {
+                let data = await this.parseBody<T>(res, contenType);
+
+                result = {
+                    data,
+                    status: res.status,
+                    statusText: res.statusText,
+                    headers: res.headers,
+                }
+            } else {
+                result.data = (res as any).data;
             }
 
             return result;
 
         }).catch(error => {
-            if (this.interceptors) {
-                for (const interceptor of this.interceptors?.response.errorHandlers ?? []) {
-                    interceptor(error);
-                }
+            for (const interceptor of this.interceptors?.response.errorHandlers ?? []) {
+                interceptor(error);
             }
+
             throw error;
         }).finally(() => {
             if (timeoutId) clearTimeout(timeoutId);
@@ -119,32 +120,22 @@ export class EasyFetch {
         return config.body;
     }
 
-    private async parseBody<T>(response: Response, responseType?: string): Promise<T> {
+    private async parseBody<T>(response: Response, contentType: string): Promise<T> {
 
-        let result;
-        switch (responseType) {
-            case "text":
-                const text = await response.text();
-                result = text as unknown as T;
-                break;
-            case "blob":
-                result = response.blob();
-                break;
-            default:
-                result = response.json();
-                break;
+        if (contentType.includes("application/json")) {
+            return await response.json();
         }
 
-        // const contentType = response.headers.get("Content-Type");
+        if (contentType.includes("text/")) {
+            return await response.text() as T;
+        }
 
-        // if (contentType?.includes("application/json")) {
-        //     return response.json();
-        // }
+        if (contentType.includes("application/pdf") || contentType.includes("application/octet-stream")) {
+            return await response.blob() as T;
+        }
 
-        // const text = await response.text();
-        // return text as unknown as T;
-
-        return result;
+        // fallback
+        return await response.text() as T;
     }
 
 }

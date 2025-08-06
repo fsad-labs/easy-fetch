@@ -5,5 +5,4 @@ export interface IResponse<T = any> {
     status: number;
     statusText: string;
     headers: Headers;
-    config: IRequestConfig
 }

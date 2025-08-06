@@ -1,7 +1,9 @@
 import { EasyFetch } from "./easyFetch";
 import { IEasyFetchClient, IEasyFetchOptions, IInterceptors, IRequestConfig } from "./types";
 
-export function createClient(config: IEasyFetchOptions = {}): IEasyFetchClient & { interceptors?: IInterceptors } {
+type clienType = IEasyFetchClient & { interceptors?: IInterceptors }
+
+export function createClient(config: IEasyFetchOptions = {}): clienType {
 
     const interceptors: IInterceptors = {
         request: {
@@ -23,11 +25,11 @@ export function createClient(config: IEasyFetchOptions = {}): IEasyFetchClient &
     const easyFetch = new EasyFetch(config, interceptors);
 
     const client: IEasyFetchClient & { interceptors?: IInterceptors } = {
-        get: (url: string, options?: IRequestConfig) => easyFetch.request({ ...options, url: url, method: "GET" }),
-        post: (url: string, options?: IRequestConfig) => easyFetch.request({ ...options, url, method: "POST" }),
-        put: (url: string, options?: IRequestConfig) => easyFetch.request({ ...options, url, method: "PUT" }),
-        patch: (url: string, options?: IRequestConfig) => easyFetch.request({ ...options, url, method: "PATCH" }),
-        delete: (url: string, options?: IRequestConfig) => easyFetch.request({ ...options, url, method: "DELETE" }),
+        get: <T = any>(url: string, options?: IRequestConfig) => easyFetch.request<T>({ ...options, url, method: "GET" }),
+        post: <T = any>(url: string, options?: IRequestConfig) => easyFetch.request<T>({ ...options, url, method: "POST" }),
+        put: <T = any>(url: string, options?: IRequestConfig) => easyFetch.request<T>({ ...options, url, method: "PUT" }),
+        patch: <T = any>(url: string, options?: IRequestConfig) => easyFetch.request<T>({ ...options, url, method: "PATCH" }),
+        delete: <T = any>(url: string, options?: IRequestConfig) => easyFetch.request<T>({ ...options, url, method: "DELETE" }),
         interceptors,
     }
 
