@@ -20,13 +20,14 @@ npm i @fsad-labs/easy-fetch
 
 #### # easyFetch
 
-| Props (instance) | Type     | Description                |
+| Props (client instance) | Type     | Description                |
 | :-------- | :------- | :------------------------- |
 |`get`|`function`| HTTP GET
 |`post`|`function`| HTTP POST
 |`put`|`function`| HTTP PUT
 |`delete`|`function`| HTTP DELETE
 |`interceptors`|`any`| Interceptors [ Request, Response ]: Use
+
 
 | Response | Type     | Description                |
 | :-------- | :------- | :------------------------- |
@@ -40,45 +41,80 @@ npm i @fsad-labs/easy-fetch
 
 You can use these different clients for make you fetch call API or create your own client with easyFetch.  
 
-```bash
-const { 
-    easyFetch,
-    createClient,
-    easyFetchAuth,
-    easyFetchWithHeaders,
-    easyFetchWithTimeout } = require('@fsad-labs/easy-fetch');
-
-```
-
 - [x] easyFetch
 The default fetch wrapper with automatic JSON parsing and basic error handling.
 
 
 ```bash
+const { EasyFetch } = require('@fsad-labs/easy-fetch');
+
 const baseUrl = "https://jsonplaceholder.typicode.com";
 
-easyFetch(baseUrl).get("/todos/1").then((res) =>  {
-    //TODO 
+const easyFetch = new EasyFetch({ baseUrl });
+
+easyFetch.interceptors.request.use((config) => {
+    // CUSTOM HEADERS
+    config.headers.append("Custom", "custom-header");
+    config.headers.delete("Content-Type");
+    config.headers.append("Content-Type", "charset=UTF-8");
+    config.headers.append("Authorization", "Bearer token-id");
+
+    console.log("intercepted request => ", config.headers);
+    return config;
 });
 
-easyFetch(baseUrl).post("/post", {
+easyFetch.interceptors.response.use(async response => {
+    
+    if (response.headers.get("Content-Type")?.includes("application/json")) {
+        const data = await response.json();
+
+        return {
+            data,
+            status: response.status,
+            statusText: `${response.statusText} -> Changed`,
+            headers: response.headers,
+        };
+    }
+
+    return response;
+    
+}, (err) => {
+    console.log("Something was wrong", err);
+});
+
+easyFetch.request({ url: '/todos/1', method: "GET" }).then(res => console.log("GET", res));
+
+easyFetch.request({
+    url: '/posts',
+    method: "POST",
     body: {
         userId: 1,
+        //id: number,
         title: "TEST",
         body: "TEST Library"
     }
-}).then(res => { // TODO  });
+}).then(res => console.log("POST", res));
 
-easyFetch(baseUrl).put("/put", {
+easyFetch.request({
+    url: '/posts/1',
+    method: "PUT",
     body: {
         userId: 1,
         id: 1,
         title: "TEST",
         body: "TEST Library edited"
     }
-}).then(res=> { //TODO });
+}).then(res => console.log("PUT my POST", res.statusText));
 
-easyFetch(baseUrl).delete("/delete").then(res=> { //TODO } )
+new Promise(r => setTimeout(() => {
+    easyFetch.request({
+        url: '/posts/1',
+        method: "DELETE"
+    }).then(res => {
+        console.log("DELETE", res.statusText)
+        r();
+    })
+}, 2000));
 
 ```
 
@@ -114,7 +150,11 @@ easyFetchcustomClient.interceptors.response.use(async response => {
 
 }, (err) => {
     // TODO: Catch the error by yourself 
-    console.log("HANLDER ERROR => ", err);
+    if (err.status === 401) {
+        //   redirectToLogin();
+    } else if (err.status >= 500) {
+        //   showGlobalError("Server error");
+    }
 });
 
 easyFetchcustomClient.get("/todos/1").then((result) => {
@@ -129,6 +169,8 @@ easyFetchcustomClient.get("/todos/1").then((result) => {
 Use this client to easily make authenticated requests.
 
 ```bash
+const auth = easyFetchAuth(baseUrl, token);
+
 auth.interceptors.request.use((config) => {
     //TODO: Update the request config
     return config;
