@@ -16,7 +16,15 @@ export class EasyFetch {
         this.httpHeaders = options.headers;
         this.timeout = options.timeout ?? 0;
         this.token = options.token;
-        this.interceptors = interceptors;
+        this.interceptors = interceptors || {
+            request: { handlers: [], use(fn: any) { this.handlers.push(fn) } },
+            response: {
+                successHandlers: [], errorHandlers: [], use(onSuccess: any, onError?: any) {
+                    this.successHandlers.push(onSuccess);
+                    if (onError) this.errorHandlers.push(onError);
+                }
+            }
+        }
     }
 
     async request<T = any>(config: IRequestConfig): Promise<IResponse<T>> {
@@ -60,7 +68,11 @@ export class EasyFetch {
             body: this.prepareBody(config),
             signal: config.signal ?? controller.signal
         }), config.retries, config.retryDelay).then(async (res: Response) => {
-
+            
+            for (const interceptor of this.interceptors?.response?.successHandlers ?? []) {
+                res = await interceptor(res);
+            }
+            
             let result: IResponse<T> = {
                 data: undefined as unknown as T,
                 status: res.status,
@@ -70,11 +82,8 @@ export class EasyFetch {
 
             const contenType = res.headers.get("Content-Type") || '';
 
-            for (const interceptor of this.interceptors?.response?.successHandlers ?? []) {
-                res = await interceptor(res);
-            }
-
             const wasModified = typeof (res as any).data !== "undefined";
+            
 
             if (!wasModified) {
                 let data = await this.parseBody<T>(res, contenType);
