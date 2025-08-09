@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/fsad-labs/easy-fetch"
   },
-  "version": "1.0.6",
+  "version": "1.0.7",
   "main": "dist/index.cjs",
   "module": "./dist/index.js",
   "types":"dist/index.d.ts",
@@ -21,9 +21,9 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --out-dir dist",
+    "build": "tsup --clean",
     "dev":"tsup src/index.ts --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "check-size":"node check/check-gzip-size.js"
   },
   "devDependencies": {
     "eslint": "^9.31.0",
